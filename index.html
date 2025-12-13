@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Semáforo da Alimentação Saudável</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: #f4f7fb;
+        padding: 20px;
+        margin: 0;
+    }
+
+    h1 {
+        color: #006b5c;
+        margin-bottom: 5px;
+    }
+
+    .autor {
+        font-size: 15px;
+        margin-top: -5px;
+        color: #006b5c;
+        font-weight: bold;
+    }
+
+    .descricao {
+        max-width: 650px;
+        margin: 5px auto 20px auto;
+        font-size: 16px;
+    }
+
+    /* Barra de progresso */
+    .progress-bar-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto 10px auto;
+        background: #ddd;
+        height: 18px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #27ae60, #2ecc71);
+        transition: width 0.4s ease;
+    }
+
+    .game-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 25px;
+        align-items: center;
+        margin-top: 15px;
+    }
+
+    /* Semáforo com carinhas */
+    .traffic-wrapper {
+        display: flex;
+        justify-content: center;
+    }
+
+    .traffic-light {
+        background: #111;
+        width: 140px;
+        padding: 18px 10px;
+        border-radius: 60px;
+        box-shadow: 0 0 12px rgba(0,0,0,0.4);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .light {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        position: relative;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .light.red    { background: radial-gradient(circle at 30% 30%, #ff9999, #e02424); }
+    .light.yellow { background: radial-gradient(circle at 30% 30%, #ffeaa7, #f1c40f); }
+    .light.green  { background: radial-gradient(circle at 30% 30%, #a8ffbf, #27ae60); }
+
+    .light-face {
+        position: relative;
+        width: 70%;
+        height: 70%;
+    }
+
+    .eye {
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        background: white;
+        border-radius: 50%;
+        top: 20px;
+        box-shadow: 0 0 3px rgba(0,0,0,0.4);
+    }
+
+    .eye.left { left: 8px; }
+    .eye.right { right: 8px; }
+
+    .pupil {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #222;
+        border-radius: 50%;
+        top: 8px;
+        left: 7px;
+    }
+
+    .mouth {
+        position: absolute;
+        width: 40px;
+        height: 24px;
+        border-radius: 0 0 40px 40px;
+        border-bottom: 4px solid #222;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .light.green .mouth  { border-bottom-color: #0b2; }
+    .light.red .mouth    { border-bottom-color: #400; transform: translateX(-50%) rotate(180deg); }
+    .light.yellow .mouth { border-bottom-color: #aa7a00; }
+
+    .light.active {
+        transform: scale(1.08);
+        box-shadow: 0 0 14px rgba(255,255,255,0.9);
+    }
+
+    .light.shake { animation: shake 0.3s; }
+
+    @keyframes shake {
+        25% { transform: translateX(-4px); }
+        50% { transform: translateX(4px); }
+        75% { transform: translateX(-4px); }
+    }
+
+    /* Painel do jogo */
+    .panel {
+        background: white;
+        border-radius: 18px;
+        padding: 20px;
+        max-width: 480px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+
+    .restart-btn {
+        background: #006b5c;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        float: right;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .food-display {
+        font-size: 70px;
+        margin: 10px 0 0 0;
+    }
+
+    .food-name {
+        font-size: 20px;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .buttons {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn {
+        font-size: 18px;
+        padding: 12px 18px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: bold;
+        color: #fff;
+        min-width: 140px;
+        transition: 0.15s ease;
+    }
+
+    .btn-green  { background: #27ae60; }
+    .btn-yellow { background: #f1c40f; color: #333; }
+    .btn-red    { background: #e74c3c; }
+
+    .btn-disabled {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    #feedback {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 15px;
+        min-height: 40px;
+    }
+
+    #score {
+        margin-top: 10px;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .final-message {
+        font-size: 22px;
+        margin-top: 15px;
+    }
+
+    .btn-restart-panel {
+        margin-top: 15px;
+        background: #006b5c;
+        color: white;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>Semáforo da Alimentação Saudável</h1>
+
+<p class="autor">Professora Vanda Várzea</p>
+
+<p class="descricao">
+    <strong>Como jogar:</strong> Observa o alimento que aparece no ecrã e escolhe a cor certa do semáforo.
+    🟢 Verde faz bem, 🟡 Amarelo com atenção e 🔴 Vermelho só de vez em quando!
+</p>
+
+<div class="progress-bar-container">
+    <div class="progress-bar" id="progress-fill"></div>
+</div>
+
+<div class="game-container">
+
+    <!-- Semáforo -->
+    <div class="traffic-wrapper">
+        <div class="traffic-light">
+            <div class="light red" id="light-red">
+                <div class="light-face">
+                    <div class="eye left"><div class="pupil"></div></div>
+                    <div class="eye right"><div class="pupil"></div></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
+
+            <div class="light yellow" id="light-yellow">
+                <div class="light-face">
+                    <div class="eye left"><div class="pupil"></div></div>
+                    <div class="eye right"><div class="pupil"></div></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
+
+            <div class="light green" id="light-green">
+                <div class="light-face">
+                    <div class="eye left"><div class="pupil"></div></div>
+                    <div class="eye right"><div class="pupil"></div></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel do jogo -->
+    <div class="panel">
+        <button class="restart-btn" onclick="startGame()">Reiniciar Jogo</button>
+
+        <div class="food-display" id="food-emoji">🍎</div>
+        <div class="food-name" id="food-name">Maçã</div>
+
+        <div class="buttons">
+            <button class="btn btn-green"  id="btn-green">🟢 Verde</button>
+            <button class="btn btn-yellow" id="btn-yellow">🟡 Amarelo</button>
+            <button class="btn btn-red"    id="btn-red">🔴 Vermelho</button>
+        </div>
+
+        <div id="feedback"></div>
+        <div id="score">Pontuação: 0</div>
+        <div id="final"></div>
+    </div>
+</div>
+
+<script>
+/* -------------------- ALIMENTOS --------------------- */
+const foods = [
+    // Verde (todos os dias)
+    { emoji: "🍎", name: "Maçã", color: "verde" },
+    { emoji: "🍌", name: "Banana", color: "verde" },
+    { emoji: "🍇", name: "Uvas", color: "verde" },
+    { emoji: "🍊", name: "Laranja", color: "verde" },
+    { emoji: "🍓", name: "Morangos", color: "verde" },
+    { emoji: "🍉", name: "Melancia", color: "verde" },
+    { emoji: "🥕", name: "Cenoura", color: "verde" },
+    { emoji: "🥦", name: "Brócolos", color: "verde" },
+    { emoji: "🥒", name: "Pepino", color: "verde" },
+    { emoji: "🥬", name: "Legumes de folha", color: "verde" },
+    { emoji: "🥦", name: "Legumes cozidos", color: "verde" },
+    { emoji: "🥣", name: "Sopa de legumes", color: "verde" },
+    { emoji: "💧", name: "Água", color: "verde" },
+    { emoji: "🥛", name: "Leite", color: "verde" },
+    { emoji: "🧃", name: "Sumo natural", color: "verde" },
+    { emoji: "🐟", name: "Peixe grelhado", color: "verde" },
+    { emoji: "🍗", name: "Frango grelhado", color: "verde" },
+    { emoji: "🥚", name: "Ovos cozidos", color: "verde" },
+
+    // Amarelo (com moderação)
+    { emoji: "🍞", name: "Pão", color: "amarelo" },
+    { emoji: "🥐", name: "Croissant simples", color: "amarelo" },
+    { emoji: "🍝", name: "Massa", color: "amarelo" },
+    { emoji: "🍚", name: "Arroz", color: "amarelo" },
+    { emoji: "🥔", name: "Batata", color: "amarelo" },
+    { emoji: "🧀", name: "Queijo", color: "amarelo" },
+    { emoji: "🥩", name: "Carne", color: "amarelo" },
+    { emoji: "🧈", name: "Manteiga", color: "amarelo" },
+    { emoji: "🫒", name: "Azeite", color: "amarelo" },
+    { emoji: "🥖", name: "Pão de forma", color: "amarelo" },
+    { emoji: "🥛", name: "Leite achocolatado", color: "amarelo" },
+
+    // Vermelho (só de vez em quando)
+    { emoji: "🍰", name: "Bolo de aniversário", color: "vermelho" },
+    { emoji: "🧁", name: "Cupcake", color: "vermelho" },
+    { emoji: "🍩", name: "Donut", color: "vermelho" },
+    { emoji: "🍪", name: "Bolachas doces", color: "vermelho" },
+    { emoji: "🍬", name: "Rebuçados", color: "vermelho" },
+    { emoji: "🍫", name: "Chocolate", color: "vermelho" },
+    { emoji: "🍭", name: "Chupa-chupa", color: "vermelho" },
+    { emoji: "🍟", name: "Batatas fritas", color: "vermelho" },
+    { emoji: "🍕", name: "Pizza", color: "vermelho" },
+    { emoji: "🍔", name: "Hambúrguer", color: "vermelho" },
+    { emoji: "🌭", name: "Cachorro quente", color: "vermelho" },
+    { emoji: "🥤", name: "Refrigerante", color: "vermelho" },
+    { emoji: "🧃", name: "Sumo com muito açúcar", color: "vermelho" },
+    { emoji: "🍿", name: "Pipocas doces", color: "vermelho" },
+    { emoji: "🍮", name: "Sobremesa doce", color: "vermelho" }
+];
+
+/* -------------------- ELEMENTOS DO DOM --------------------- */
+const foodEmojiEl = document.getElementById("food-emoji");
+const foodNameEl  = document.getElementById("food-name");
+const feedbackEl  = document.getElementById("feedback");
+const scoreEl     = document.getElementById("score");
+const finalEl     = document.getElementById("final");
+const progressFill = document.getElementById("progress-fill");
+
+const btnGreen  = document.getElementById("btn-green");
+const btnYellow = document.getElementById("btn-yellow");
+const btnRed    = document.getElementById("btn-red");
+
+const lightRed    = document.getElementById("light-red");
+const lightYellow = document.getElementById("light-yellow");
+const lightGreen  = document.getElementById("light-green");
+
+/* -------------------- ÁUDIO (sons arcade) --------------------- */
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playTone(freq, time, duration, type = "square", vol = 0.25) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + time);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime + time);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + time);
+    osc.stop(audioCtx.currentTime + time + duration);
+}
+
+function soundCorrect() {
+    initAudio();
+    // Pequena subida "coin"
+    playTone(880, 0,   0.10);
+    playTone(1200,0.10,0.12);
+    playTone(1500,0.22,0.12);
+}
+
+function soundWrong() {
+    initAudio();
+    // Dois graves "bump"
+    playTone(260, 0,   0.16, "square", 0.3);
+    playTone(180, 0.16,0.18, "square", 0.3);
+}
+
+function soundWin() {
+    initAudio();
+    // Mini fanfarra
+    playTone(700, 0,    0.16);
+    playTone(900, 0.18, 0.16);
+    playTone(1100,0.34, 0.20);
+    playTone(1400,0.56, 0.24);
+}
+
+/* -------------------- LÓGICA DO JOGO --------------------- */
+let quizFoods = [];
+let currentIndex = 0;
+let score = 0;
+const totalQuestions = 15;
+
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+function startGame() {
+    quizFoods = [...foods];
+    shuffle(quizFoods);
+    quizFoods = quizFoods.slice(0, totalQuestions); // sem repetições
+
+    currentIndex = 0;
+    score = 0;
+    feedbackEl.textContent = "";
+    finalEl.innerHTML = "";
+    updateScore();
+    updateProgress();
+    enableButtons(true);
+    showQuestion();
+}
+
+function updateProgress() {
+    const pct = (currentIndex / totalQuestions) * 100;
+    progressFill.style.width = pct + "%";
+}
+
+function showQuestion() {
+    const item = quizFoods[currentIndex];
+    foodEmojiEl.textContent = item.emoji;
+    foodNameEl.textContent  = item.name;
+    feedbackEl.textContent  = "";
+    clearLights();
+    updateProgress();
+}
+
+function enableButtons(enable) {
+    const method = enable ? "remove" : "add";
+    btnGreen.classList[method]("btn-disabled");
+    btnYellow.classList[method]("btn-disabled");
+    btnRed.classList[method]("btn-disabled");
+}
+
+function clearLights() {
+    [lightRed, lightYellow, lightGreen].forEach(l => {
+        l.classList.remove("active");
+        l.classList.remove("shake");
+    });
+}
+
+function highlightLight(color, isError = false) {
+    clearLights();
+    let light = null;
+    if (color === "verde")   light = lightGreen;
+    if (color === "amarelo") light = lightYellow;
+    if (color === "vermelho")light = lightRed;
+    if (!light) return;
+
+    if (isError) light.classList.add("shake");
+    else light.classList.add("active");
+}
+
+function updateScore() {
+    scoreEl.textContent = "Pontuação: " + score;
+}
+
+function handleAnswer(color) {
+    initAudio();
+    enableButtons(false);
+
+    const item = quizFoods[currentIndex];
+    const correct = item.color;
+
+    if (color === correct) {
+        score++;
+        updateScore();
+        feedbackEl.style.color = "#1e8449";
+        feedbackEl.textContent = "✔️ Muito bem! " + item.name + " está certo!";
+        highlightLight(color, false);
+        soundCorrect();
+    } else {
+        feedbackEl.style.color = "#c0392b";
+        let textoCor = "";
+        if (correct === "verde")   textoCor = "VERDE (faz bem)";
+        if (correct === "amarelo") textoCor = "AMARELO (com moderação)";
+        if (correct === "vermelho")textoCor = "VERMELHO (só de vez em quando)";
+        feedbackEl.textContent = "❌ Ups! A resposta certa era " + textoCor + ".";
+        highlightLight(color, true);
+        soundWrong();
+    }
+
+    setTimeout(() => {
+        currentIndex++;
+        if (currentIndex < totalQuestions) {
+            enableButtons(true);
+            showQuestion();
+        } else {
+            endGame();
+        }
+    }, 1700);
+}
+
+function endGame() {
+    clearLights();
+    soundWin();
+    updateProgress();
+    progressFill.style.width = "100%";
+
+    let msg = "";
+    if (score === totalQuestions) {
+        msg = "🏆 Fantástico! Acertaste todas as " + totalQuestions + " perguntas!";
+    } else if (score >= totalQuestions * 0.6) {
+        msg = "🎉 Muito bem! Fizeste " + score + " em " + totalQuestions + "!";
+    } else {
+        msg = "😊 Terminaste! Fizeste " + score + " em " + totalQuestions + ". Vamos treinar mais uma vez?";
+    }
+
+    finalEl.innerHTML = `
+        <div class="final-message">${msg}</div>
+        <button class="btn-restart-panel" onclick="startGame()">Jogar outra vez</button>
+    `;
+}
+
+/* Eventos dos botões */
+btnGreen.addEventListener("click",  () => handleAnswer("verde"));
+btnYellow.addEventListener("click", () => handleAnswer("amarelo"));
+btnRed.addEventListener("click",    () => handleAnswer("vermelho"));
+
+/* Iniciar ao carregar a página */
+startGame();
+</script>
+
+</body>
+</html>
